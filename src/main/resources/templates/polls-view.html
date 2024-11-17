@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Polls</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #6366f1;
+            --secondary-color: #818cf8;
+            --background-color: #f3f4f6;
+            --card-background: #ffffff;
+            --text-primary: #1f2937;
+            --text-secondary: #4b5563;
+        }
+
+        body {
+            background: var(--background-color);
+            min-height: 100vh;
+            padding: 2rem 0;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+        }
+
+        .container {
+            max-width: 1000px;
+        }
+
+        .page-title {
+            color: var(--text-primary);
+            font-weight: 800;
+            font-size: 2.5rem;
+            text-align: center;
+            margin-bottom: 2rem;
+            position: relative;
+            padding-bottom: 1rem;
+        }
+
+        .page-title::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100px;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+            border-radius: 2px;
+        }
+
+        .poll-card {
+            background: var(--card-background);
+            border-radius: 15px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            padding: 2rem;
+            margin-bottom: 2rem;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .poll-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+
+        .poll-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: linear-gradient(180deg, var(--primary-color), var(--secondary-color));
+        }
+
+        .poll-title {
+            color: var(--text-primary);
+            font-weight: 700;
+            font-size: 1.2rem;
+            margin-bottom: 1rem;
+        }
+
+        .poll-meta {
+            display: flex;
+            gap: 2rem;
+            margin-bottom: 1.2rem;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .poll-meta-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .poll-meta-item i {
+            color: var(--primary-color);
+        }
+
+        .options-container {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .option-wrapper {
+            position: relative;
+            cursor: pointer;
+        }
+
+        .option-input {
+            display: none;
+        }
+
+        .option-label {
+            display: block;
+            padding: 1rem;
+            background: #f8fafc;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .option-input:checked + .option-label {
+            border-color: var(--primary-color);
+            background: #eef2ff;
+        }
+
+        .option-progress {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            height: 4px;
+            background: var(--primary-color);
+            transition: width 0.6s ease;
+            border-radius: 0 2px 2px 0;
+        }
+
+        .option-text {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: relative;
+            z-index: 1;
+        }
+
+        .option-percentage {
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+
+        .vote-button {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 0.75rem 2rem;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            width: 100%;
+        }
+
+        .vote-button:hover {
+            background: var(--secondary-color);
+            transform: translateY(-2px);
+        }
+
+        .vote-button:active {
+            transform: translateY(0);
+        }
+
+        .vote-button i {
+            margin-right: 0.5rem;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        .voted {
+            animation: pulse 0.5s ease;
+        }
+
+        @media (max-width: 768px) {
+            .poll-meta {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            
+            .container {
+                padding: 0 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container animate__animated animate__fadeIn">
+        <h1 class="page-title">Active Polls</h1>
+
+        <div th:each="poll : ${polls}" class="poll-card animate__animated animate__fadeInUp">
+            <h2 class="poll-title" th:text="${poll.title}"></h2>
+            
+            <div class="poll-meta">
+                <div class="poll-meta-item">
+                    <i class="fas fa-folder"></i>
+                    <span th:text="${poll.category.name}"></span>
+                </div>
+                <div class="poll-meta-item">
+                   <!--  <i class="fas fa-calendar"></i>
+                    <span th:text="${#temporals.format(poll.pollDate, 'MMM dd, yyyy HH:mm')}"></span> -->
+                    <span th:text="${poll.pollDate}"></span>
+                </div>
+            </div>
+
+            <form th:action="@{/polls/vote}" method="post" class="poll-form">
+                <div class="options-container">
+                    <div th:each="option : ${poll.options}" class="option-wrapper">
+                        <input type="radio" 
+                               th:id="${'option-' + option.optionId}"
+                               name="optionId"
+                               th:value="${option.optionId}"
+                               required
+                               class="option-input">
+                        <label th:for="${'option-' + option.optionId}" class="option-label">
+                            <div class="option-text">
+                                <span th:text="${option.title}"></span>
+                                <span class="option-percentage" th:text="${option.votePercentage + '%'}"></span>
+                            </div>
+                            <div class="option-progress" th:style="'width: ' + ${option.votePercentage + '%'}"></div>
+                        </label>
+                    </div>
+                </div>
+                
+                <button type="submit" class="vote-button">
+                    <i class="fas fa-vote-yea"></i>
+                    Submit Vote
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+          
+        document.addEventListener('DOMContentLoaded', function() {
+            // Highlight selected option
+            const options = document.querySelectorAll('.option-input');
+            options.forEach(option => {
+                option.addEventListener('change', function() {
+                    const wrapper = this.closest('.option-wrapper');
+                    wrapper.classList.add('voted');
+                    setTimeout(() => wrapper.classList.remove('voted'), 500);
+                });
+            });
+
+            // Animate progress bars on page load
+            const progressBars = document.querySelectorAll('.option-progress');
+            progressBars.forEach(bar => {
+                const width = bar.style.width;
+                bar.style.width = '0';
+                setTimeout(() => {
+                    bar.style.width = width;
+                }, 300);
+            });
+
+            // Submit form animation
+            const forms = document.querySelectorAll('.poll-form');
+            forms.forEach(form => {
+                form.addEventListener('submit', function(e) {
+                    const button = this.querySelector('.vote-button');
+                    button.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Submitting...';
+                    button.disabled = true;
+                });
+            });
+        });
+    </script>
+</body>
+</html>

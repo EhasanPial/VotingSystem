@@ -47,40 +47,9 @@ public class VoterController {
         }
     }
 
-    // Password Verification
-    @PostMapping("/verify-password")
-    public ResponseEntity<String> verifyPassword(@RequestParam String email, @RequestParam String password) {
-        boolean isVerified = voterService.verifyPassword(email, password);
-        if (isVerified) {
-            return ResponseEntity.ok("Password is valid.");
-        } else {
-            return ResponseEntity.status(401).body("Invalid email or password.");
-        }
-    }
+    
     
     
     // --------------------- Frontend --------------------- //
-     @GetMapping("/register")
-    public ModelAndView showRegistrationForm(@ModelAttribute Voter model) {
-		ModelAndView modelAndView = new ModelAndView();
-		modelAndView.setViewName("voter-registration");
-		modelAndView.addObject("voter", new Voter());
-		return  modelAndView;
-    }
-
-     @PostMapping("/register")
-     public ModelAndView registerVoter(@ModelAttribute Voter voter, Model model) {
-         ModelAndView modelAndView = new ModelAndView();
-         try {
-             voterService.saveVoter(voter);
-             model.addAttribute("message", "Registration successful!");
-             modelAndView.setViewName("voter-registration");
-             modelAndView.addObject("voter", new Voter()); // Reset form after submission
-         } catch (Exception e) {
-             model.addAttribute("error", "An error occurred during registration. Please try again.");
-             modelAndView.setViewName("voter-registration");
-             modelAndView.addObject("voter", voter); // Keep the form values after error
-         }
-         return modelAndView;
-     }
+    
 }

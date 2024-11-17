@@ -16,16 +16,16 @@ public class CategoryController {
     @Autowired
     private CategoryService categoryService;
 
-    @GetMapping("/admin/category/create")
+    @GetMapping("/admin-category-create")
     public String showCategoryForm(Model model) {
         model.addAttribute("category", new Category());
         return "category-create"; // Thymeleaf template
     }
 
-    @PostMapping("/admin/category/create")
+    @PostMapping("/admin-category-create")
     public String createCategory(@ModelAttribute Category category, Model model) {
         categoryService.createCategory(category);
         model.addAttribute("message", "Category created successfully!");
-        return "redirect:/admin/category/create"; // Redirect to category creation page after saving
+        return "category-create";
     }
 }
