@@ -29,4 +29,9 @@ public class AdminService {
         Optional<Admin> admin = adminRepository.findByEmail(email);
         return admin.isPresent() && admin.get().getPassword().equals(password);
     }
+    
+    // find by email
+	public Admin getAdminByEmail(String email) {
+		return adminRepository.findByEmail(email).get();
+	}
 }

@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.votingsystem.VotingSystem.Service.AdminService;
 import com.votingsystem.VotingSystem.Service.CategoryService;
@@ -74,24 +75,23 @@ public class AuthController {
 
 	@GetMapping("/admin/create-poll")
 	public String showPollCreationForm(Model model) {
- 		model.addAttribute("poll", new Poll());
- 		List<Category> categories = categoryService.getAllCategories();
+		model.addAttribute("poll", new Poll());
+		List<Category> categories = categoryService.getAllCategories();
 		model.addAttribute("categories", categories);
 		return "poll-create";
 	}
 
 	@PostMapping("/admin/create-poll")
-	public String createPoll(@ModelAttribute Poll poll, 
-	                         @RequestParam List<String> optionTitles, 
-	                         Model model) {
-	    try {
-	        pollService.createPollWithOptions(poll, optionTitles);
-	        model.addAttribute("message", "Poll created successfully!");
-	        return "redirect:/admin/create-poll"; // Redirect after successful creation
-	    } catch (Exception e) {
-	        model.addAttribute("error", "An error occurred while creating the poll.");
-	        return "poll-create"; // Return to form on error
-	    }
+	public String createPoll(@ModelAttribute Poll poll, @RequestParam List<String> optionTitles,
+			RedirectAttributes redirectAttributes) {
+		try {
+			pollService.createPollWithOptions(poll, optionTitles);
+			redirectAttributes.addFlashAttribute("message", "Poll created successfully!");
+		} catch (Exception e) {
+			redirectAttributes.addFlashAttribute("error", "An error occurred while creating the poll.");
+			redirectAttributes.addFlashAttribute("message", "Failed to create poll!");
+		}
+		return "redirect:/admin/create-poll";
 	}
 
 }

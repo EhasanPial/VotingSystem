@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 
 import com.votingsystem.VotingSystem.Repository.OptionRepository;
 import com.votingsystem.VotingSystem.Repository.PollRepository;
+import com.votingsystem.VotingSystem.model.Constants;
 import com.votingsystem.VotingSystem.model.Option;
 import com.votingsystem.VotingSystem.model.Poll;
 
@@ -18,9 +19,13 @@ public class PollService {
 
     @Autowired
     private OptionRepository optionRepository;
+    
+    @Autowired
+    private AdminService adminService;
 
     public void createPollWithOptions(Poll poll, List<String> optionTitles) {
     	
+    	 poll.setAdmin(adminService.getAdminByEmail(Constants.ADMIN_TYPE_1_EMAIL));
          Poll savedPoll = pollRepository.save(poll);
 
          for (String title : optionTitles) {

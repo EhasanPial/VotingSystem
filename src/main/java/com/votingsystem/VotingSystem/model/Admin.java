@@ -30,5 +30,5 @@ public class Admin {
     private String password;
 
     @Column(name = "type")
-    private int type;
+    private int type; // 1 - Voter Verifier // 2 - Poll Manager
 }
