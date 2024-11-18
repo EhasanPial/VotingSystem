@@ -42,25 +42,32 @@ public class LoginController {
 			return "register";
 		}
 
-		// Encode the password
 		voter.setPassword(passwordEncoder.encode(voter.getPassword()));
 
-		// Save voter
-		voter.setEnabled(true); // Enable the user by default
+		voter.setEnabled(true); 
 		voterService.saveVoter(voter);
 
-		return "redirect:/login?registered=true"; // Redirect to login with a success flag
+		return "redirect:/login?registered=true"; 
 	}
 
 	@GetMapping("/index")
 	public String showIndexPage(Principal principal) {
-	    String username = principal.getName(); // Gets logged in user's email
+	    String username = principal.getName(); 
 	    
 	    if ("admin".equals(username)) {
 	        return "redirect:/admin-index";
 	    }
 	    return "redirect:/polls";
 	}
-
+	
+	@GetMapping("/")
+	public String showHomePage(Principal principal) {
+	    String username = principal.getName(); 
+	    
+	    if ("admin".equals(username)) {
+	        return "redirect:/admin-index";
+	    }
+	    return "redirect:/polls";
+	}
 
 }
