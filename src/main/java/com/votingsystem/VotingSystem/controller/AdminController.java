@@ -15,6 +15,7 @@ import com.votingsystem.VotingSystem.Service.CategoryService;
 import com.votingsystem.VotingSystem.Service.PollService;
 import com.votingsystem.VotingSystem.model.Category;
 import com.votingsystem.VotingSystem.model.Poll;
+import com.votingsystem.VotingSystem.model.PollRequest;
 
 @Controller
 public class AdminController {
@@ -37,17 +38,17 @@ public class AdminController {
 
 	@GetMapping("/admin-create-poll")
 	public String showPollCreationForm(Model model) {
-		model.addAttribute("poll", new Poll());
+		model.addAttribute("poll", new PollRequest());
 		List<Category> categories = categoryService.getAllCategories();
 		model.addAttribute("categories", categories);
 		return "poll-create";
 	}
 
 	@PostMapping("/admin-create-poll")
-	public String createPoll(@ModelAttribute Poll poll, @RequestParam List<String> optionTitles,
+	public String createPoll(@ModelAttribute PollRequest poll, @RequestParam List<String> optionTitles,
 			RedirectAttributes redirectAttributes) {
 		try {
-			pollService.createPollWithOptions(poll, optionTitles);
+			pollService.createPollWithOptions(poll, optionTitles, poll.getType());
 			redirectAttributes.addFlashAttribute("message", "Poll created successfully!");
 		} catch (Exception e) {
 			redirectAttributes.addFlashAttribute("error", "An error occurred while creating the poll.");

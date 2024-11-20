@@ -25,13 +25,13 @@ public class AdminService {
     }
 
     // Verify Password
-    public boolean verifyPassword(String email, String password) {
-        Optional<Admin> admin = adminRepository.findByEmail(email);
+    public boolean verifyPassword(String username, String password) {
+        Optional<Admin> admin = adminRepository.findByUsername(username);
         return admin.isPresent() && admin.get().getPassword().equals(password);
     }
     
     // find by email
-	public Admin getAdminByEmail(String email) {
-		return adminRepository.findByEmail(email).get();
+	public Admin getAdminByUsername(String username) {
+		return adminRepository.findByUsername(username).get();
 	}
 }

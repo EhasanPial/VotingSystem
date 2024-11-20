@@ -7,10 +7,14 @@ import com.votingsystem.VotingSystem.Repository.NotificationRepository;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
+import jakarta.persistence.DiscriminatorColumn;
+import jakarta.persistence.DiscriminatorType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Inheritance;
+import jakarta.persistence.InheritanceType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
@@ -26,6 +30,8 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@Inheritance(strategy = InheritanceType.SINGLE_TABLE)
+@DiscriminatorColumn(name = "type", discriminatorType = DiscriminatorType.STRING)
 public class Poll {
 
 	@Id
@@ -36,8 +42,6 @@ public class Poll {
 	@Column(name = "Title", nullable = false)
 	private String title;
 
-	@Column(name = "type")
-	private String type;
 
 	@Column(name = "PollDate")
 	private String pollDate;
@@ -46,8 +50,8 @@ public class Poll {
 	private int totalVote;
 
 	@ManyToOne
-	@JoinColumn(name = "AdminID", nullable = false)
-	private Admin admin;
+	@JoinColumn(name = "AdminID")
+	private Voter admin;
 
 	@ManyToOne
 	@JoinColumn(name = "CategoryID", nullable = false)

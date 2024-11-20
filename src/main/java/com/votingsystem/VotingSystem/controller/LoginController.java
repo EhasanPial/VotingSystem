@@ -44,30 +44,30 @@ public class LoginController {
 
 		voter.setPassword(passwordEncoder.encode(voter.getPassword()));
 
-		voter.setEnabled(true); 
+		voter.setEnabled(true);
 		voterService.saveVoter(voter);
 
-		return "redirect:/login?registered=true"; 
+		return "redirect:/login?registered=true";
 	}
 
 	@GetMapping("/index")
 	public String showIndexPage(Principal principal) {
-	    String username = principal.getName(); 
-	    
-	    if ("admin".equals(username)) {
-	        return "redirect:/admin-index";
-	    }
-	    return "redirect:/polls";
+		String username = principal.getName();
+
+		if ("admin-1".equals(username) || "admin-2".equals(username)) {
+			return "redirect:/admin-index";
+		}
+		return "redirect:/polls";
 	}
-	
+
 	@GetMapping("/")
 	public String showHomePage(Principal principal) {
-	    String username = principal.getName(); 
-	    
-	    if ("admin".equals(username)) {
-	        return "redirect:/admin-index";
-	    }
-	    return "redirect:/polls";
+		String username = principal.getName();
+
+		if ("admin-1".equals(username) || "admin-2".equals(username)) {
+			return "redirect:/admin-index";
+		}
+		return "redirect:/polls";
 	}
 
 }

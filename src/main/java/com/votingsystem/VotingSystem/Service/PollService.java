@@ -1,6 +1,8 @@
 package com.votingsystem.VotingSystem.Service;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,8 +15,12 @@ import com.votingsystem.VotingSystem.Repository.OptionRepository;
 import com.votingsystem.VotingSystem.Repository.PollRepository;
 import com.votingsystem.VotingSystem.Repository.VoterRepository;
 import com.votingsystem.VotingSystem.model.Constants;
+import com.votingsystem.VotingSystem.model.OpenPollFactory;
 import com.votingsystem.VotingSystem.model.Option;
 import com.votingsystem.VotingSystem.model.Poll;
+import com.votingsystem.VotingSystem.model.PollFactory;
+import com.votingsystem.VotingSystem.model.PollRequest;
+import com.votingsystem.VotingSystem.model.TimePollFactory;
 import com.votingsystem.VotingSystem.model.Voter;
 
 @Service
@@ -30,19 +36,35 @@ public class PollService {
 	private NotificationRepository notificationRepository;
 
 	@Autowired
-	private AdminService adminService;
+	private VoterService adminService;
 	
 	@Autowired
 	private VoterRepository voterRepository;
+	
+    private final Map<String, PollFactory> factories;
+
+	public PollService() {
+       
+        factories = new HashMap<>();
+        factories.put("OPEN", new OpenPollFactory());
+        factories.put("TIME", new TimePollFactory());
+    }
 
 	public List<Poll> getAllPolls() {
 		return pollRepository.findAll();
 	}
 
-	public void createPollWithOptions(Poll poll, List<String> optionTitles) {
+	public void createPollWithOptions(PollRequest poll, List<String> optionTitles, String type) {
 
-		poll.setAdmin(adminService.getAdminByEmail(Constants.ADMIN_TYPE_1_EMAIL));
-		Poll savedPoll = pollRepository.save(poll);
+		Optional<Voter> adminUser = adminService.getVoterByUsername(Constants.ADMIN_TYPE_1_USER_NAME);
+		
+		if (adminUser.isPresent()) {
+			poll.setAdmin(adminUser.get());
+		}
+		
+ 		PollFactory factory = factories.get(type);
+		Poll newPoll = factory.createPoll(poll);
+		Poll savedPoll = pollRepository.save(newPoll);
         
 
 		for (String title : optionTitles) {

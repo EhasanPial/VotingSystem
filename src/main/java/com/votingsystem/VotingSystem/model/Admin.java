@@ -17,8 +17,8 @@ public class Admin {
     @Column(name = "AdminID")
     private int adminId;
 
-    @Column(name = "Name", nullable = false, length = 32)
-    private String name;
+    @Column(name = "Username", nullable = false, length = 32)
+    private String username;
 
     @Column(name = "Email")
     private String email;
@@ -26,7 +26,7 @@ public class Admin {
     @Column(name = "Phone")
     private String phone;
 
-    @Column(name = "Password", nullable = false, length = 32)
+    @Column(name = "Password", nullable = false)
     private String password;
 
     @Column(name = "type")

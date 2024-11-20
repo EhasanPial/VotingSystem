@@ -43,7 +43,7 @@ public class Voter {
 	@Column(name = "enabled", nullable = false)
 	private boolean enabled = true;
 
-	private String role = "ROLE_USER";
+	private String role;
 
 	@ManyToMany
 	@JoinTable(name = "voted_polls", joinColumns = @JoinColumn(name = "NID"), inverseJoinColumns = @JoinColumn(name = "PollID"))

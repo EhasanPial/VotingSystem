@@ -25,6 +25,11 @@ public class VoterService implements UserDetailsService {
 	public Optional<Voter> getVoterByNid(int nid) {
 		return voterRepository.findById(nid);
 	}
+	
+	// Get Voter by Username
+	public Optional<Voter> getVoterByUsername(String username) {
+		return voterRepository.findByUsername(username);
+	}
 
 	// Get Voter by Email
 	public Optional<Voter> findByEmail(String email) {
