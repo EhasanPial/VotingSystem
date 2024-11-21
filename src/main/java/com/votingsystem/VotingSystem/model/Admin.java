@@ -4,7 +4,7 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
+// test
 @Entity
 @Table(name = "admin")
 @Data // Generates getters, setters, toString, equals, and hashCode methods
