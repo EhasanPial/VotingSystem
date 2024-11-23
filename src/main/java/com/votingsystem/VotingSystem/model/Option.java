@@ -31,10 +31,12 @@ public class Option {
     private int voteCount;
 
     @Column(name = "VotePercentage")
-    private int votePercentage;
+    private double votePercentage;
 
     @ManyToOne
     @JoinColumn(name = "PollID", nullable = false)
     private Poll poll;
+
+	 
 
 }

@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.votingsystem.VotingSystem.Repository.NotificationRepository;
+import com.votingsystem.VotingSystem.model.StrategyPattern.PollResult;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -20,6 +21,7 @@ import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -66,6 +68,13 @@ public class Poll {
 	@ManyToMany
 	@JoinTable(name = "poll_voter_subscription", joinColumns = @JoinColumn(name = "poll_id"), inverseJoinColumns = @JoinColumn(name = "NID"))
 	private List<Voter> subscribedVoters = new ArrayList<>();
+	
+	@Column(name = "voting_strategy")
+	private String votingStrategy;
+	
+	@OneToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "poll_result_id", referencedColumnName = "id")
+    private PollResult pollResults;
 
 	// Subscribe a voter to the poll
 	public void subscribe(Voter voter) {

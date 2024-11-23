@@ -148,6 +148,13 @@ body {
 							<option value="TIME">Timed Poll</option>
 						</select>
 					</div>
+					<div class="mb-3">
+						<label for="type" class="form-label">Voting Result Strategy</label> <select
+							id="type" class="form-select" th:field="*{votingStrategy}" required>
+							<option value="TRADITIONAL">Traditional Method</option>
+							<option value="WEIGHTED">Weighted Method</option>
+						</select>
+					</div>
 
 					<div id="timeFields" style="display: none;">
 						<div class="mb-3">

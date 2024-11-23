@@ -1,5 +1,6 @@
 package com.votingsystem.VotingSystem.Service;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -22,6 +23,10 @@ import com.votingsystem.VotingSystem.model.PollFactory;
 import com.votingsystem.VotingSystem.model.PollRequest;
 import com.votingsystem.VotingSystem.model.TimePollFactory;
 import com.votingsystem.VotingSystem.model.Voter;
+import com.votingsystem.VotingSystem.model.StrategyPattern.FirstPastThePostStrategy;
+import com.votingsystem.VotingSystem.model.StrategyPattern.PollResult;
+import com.votingsystem.VotingSystem.model.StrategyPattern.VotingStrategy;
+import com.votingsystem.VotingSystem.model.StrategyPattern.WeightedVotingStrategy;
 
 @Service
 public class PollService {
@@ -37,18 +42,23 @@ public class PollService {
 
 	@Autowired
 	private VoterService adminService;
-	
+
 	@Autowired
 	private VoterRepository voterRepository;
-	
-    private final Map<String, PollFactory> factories;
+
+	private final Map<String, PollFactory> factories;
+	private final Map<String, VotingStrategy> votingStrategies;
 
 	public PollService() {
-       
-        factories = new HashMap<>();
-        factories.put("OPEN", new OpenPollFactory());
-        factories.put("TIME", new TimePollFactory());
-    }
+
+		factories = new HashMap<>();
+		factories.put("OPEN", new OpenPollFactory());
+		factories.put("TIME", new TimePollFactory());
+
+		votingStrategies = new HashMap<>();
+		votingStrategies.put(Constants.TRADITIONAL_METHOD, new FirstPastThePostStrategy());
+		votingStrategies.put(Constants.WEIGHTED_METHOD, new WeightedVotingStrategy(null));
+	}
 
 	public List<Poll> getAllPolls() {
 		return pollRepository.findAll();
@@ -57,15 +67,14 @@ public class PollService {
 	public void createPollWithOptions(PollRequest poll, List<String> optionTitles, String type) {
 
 		Optional<Voter> adminUser = adminService.getVoterByUsername(Constants.ADMIN_TYPE_1_USER_NAME);
-		
+
 		if (adminUser.isPresent()) {
 			poll.setAdmin(adminUser.get());
 		}
-		
- 		PollFactory factory = factories.get(type);
+
+		PollFactory factory = factories.get(type);
 		Poll newPoll = factory.createPoll(poll);
 		Poll savedPoll = pollRepository.save(newPoll);
-        
 
 		for (String title : optionTitles) {
 			Option option = new Option();
@@ -79,7 +88,7 @@ public class PollService {
 
 	public void castVote(int optionId, String username) {
 		Option option = optionRepository.findById(optionId).orElseThrow(() -> new RuntimeException("Option not found"));
-
+		
 		// Increment vote count
 		option.setVoteCount(option.getVoteCount() + 1);
 
@@ -87,53 +96,75 @@ public class PollService {
 		Poll poll = option.getPoll();
 		poll.setTotalVote(poll.getTotalVote() + 1);
 
-		// Recalculate percentages
-		for (Option opt : poll.getOptions()) {
-			int percentage = (int) ((opt.getVoteCount() * 100.0) / poll.getTotalVote());
-			opt.setVotePercentage(percentage);
-		}
-		Optional<Voter> voter =  voterRepository.findByUsername(username);
+		// Recalculate percentages based on voting strategy
+		VotingStrategy votingStrategy = votingStrategies.get(poll.getVotingStrategy());
+		PollResult result = votingStrategy.calculateResults(poll);
+
+		// check poll result is already save or not in db
+		if (poll.getPollResults() == null) {
+	        result.setTotalVotes(poll.getTotalVote());  // Ensure totalVotes is set
+	        poll.setPollResults(result);
+	        result.setPoll(poll);
+	    } else {
+	        PollResult existingResult = poll.getPollResults();
+	        existingResult.setTotalVotes(poll.getTotalVote());
+	        existingResult.setVoteCounts(result.getVoteCounts());
+	        existingResult.setVotePercentages(result.getVotePercentages());
+	        existingResult.setWinner(result.getWinner());
+	    }
+        result.setPoll(poll);
+		poll = pollRepository.save(poll);
+		
+
+		Optional<Voter> voter = voterRepository.findByUsername(username);
 		if (voter.isPresent()) {
-			voter.get().getVotedPolls().add(poll);
+			List<Poll> voterPolls =  voter.get().getVotedPolls();
+			if (voterPolls == null) {
+				voterPolls = new ArrayList<>();
+			}
+			voterPolls.add(poll);
 			voterRepository.save(voter.get());
 			poll.getVoters().add(voter.get());
 		}
 		Poll updatedPoll = pollRepository.save(poll);
-		updatedPoll.notifyVoters("The poll '" + poll.getTitle() + "' has been updated.", notificationRepository, username);
+		option.setVotePercentage(result.getVotePercentages().get(option.getTitle()));
+		optionRepository.save(option);
+		updatedPoll.notifyVoters("The poll '" + poll.getTitle() + "' has been updated.", notificationRepository,
+				username);
 	}
 
 	public String subscribeToPoll(Long pollId, String username) {
-        Voter voter = voterRepository.findByUsername(username)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Voter not found"));
-        Poll poll = pollRepository.findByPollId(pollId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Poll not found"));
+		Voter voter = voterRepository.findByUsername(username)
+				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Voter not found"));
+		Poll poll = pollRepository.findByPollId(pollId)
+				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Poll not found"));
 
-        if (!poll.getSubscribedVoters().contains(voter)) {
-            poll.subscribe(voter);
-            pollRepository.save(poll);
-            voter.addSubscribedPoll(poll);
-            voterRepository.save(voter);
-            return "Subscribed successfully to the poll.";
-        }
+		if (!poll.getSubscribedVoters().contains(voter)) {
+			poll.subscribe(voter);
+			pollRepository.save(poll);
+			voter.addSubscribedPoll(poll);
+			voterRepository.save(voter);
+			return "Subscribed successfully to the poll.";
+		}
 
-        throw new ResponseStatusException(HttpStatus.CONFLICT, "Already subscribed to this poll.");
-    }
+		throw new ResponseStatusException(HttpStatus.CONFLICT, "Already subscribed to this poll.");
+	}
 
-    public String unsubscribeFromPoll(Long pollId, String username) {
-        Voter voter = voterRepository.findByUsername(username)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Voter not found"));
-        Poll poll = pollRepository.findByPollId(pollId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Poll not found"));
+	public String unsubscribeFromPoll(Long pollId, String username) {
+		Voter voter = voterRepository.findByUsername(username)
+				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Voter not found"));
+		Poll poll = pollRepository.findByPollId(pollId)
+				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Poll not found"));
 
-        if (poll.getSubscribedVoters().contains(voter)) {
-            poll.unsubscribe(voter);
-            pollRepository.save(poll);
-            voter.removeSubscribedPoll(poll);
-            voterRepository.save(voter);
-            return "Unsubscribed successfully from the poll.";
-        }
+		if (poll.getSubscribedVoters().contains(voter)) {
+			poll.unsubscribe(voter);
+			pollRepository.save(poll);
+			voter.removeSubscribedPoll(poll);
+			voterRepository.save(voter);
+			return "Unsubscribed successfully from the poll.";
+		}
 
-        throw new ResponseStatusException(HttpStatus.CONFLICT, "You are not subscribed to this poll.");
-    }
+		throw new ResponseStatusException(HttpStatus.CONFLICT, "You are not subscribed to this poll.");
+	}
 
 }

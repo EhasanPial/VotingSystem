@@ -7,9 +7,9 @@ import lombok.NoArgsConstructor;
 // test
 @Entity
 @Table(name = "admin")
-@Data // Generates getters, setters, toString, equals, and hashCode methods
-@NoArgsConstructor // Generates a no-argument constructor
-@AllArgsConstructor // Generates a constructor with all fields
+@Data  
+@NoArgsConstructor 
+@AllArgsConstructor 
 public class Admin {
 
     @Id

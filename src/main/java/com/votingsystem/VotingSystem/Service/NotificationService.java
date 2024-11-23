@@ -6,7 +6,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.votingsystem.VotingSystem.Repository.NotificationRepository;
-import com.votingsystem.VotingSystem.Repository.VoterRepository;
 import com.votingsystem.VotingSystem.model.Notification;
 import com.votingsystem.VotingSystem.model.Voter;
 
@@ -16,8 +15,6 @@ public class NotificationService {
 	@Autowired
 	private NotificationRepository notificationRepository;
 
-	@Autowired
-	private VoterRepository voterRepository;
 
 	public void markAsRead(Long notificationId, String username) {
 		Notification notification = notificationRepository.findById(notificationId)
