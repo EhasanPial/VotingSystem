@@ -11,10 +11,17 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import com.votingsystem.VotingSystem.DecoratorPattern.BasePollDecorator;
+import com.votingsystem.VotingSystem.DecoratorPattern.IPollDecorator;
+import com.votingsystem.VotingSystem.DecoratorPattern.NotificationDecorator;
 import com.votingsystem.VotingSystem.Repository.NotificationRepository;
 import com.votingsystem.VotingSystem.Repository.OptionRepository;
 import com.votingsystem.VotingSystem.Repository.PollRepository;
 import com.votingsystem.VotingSystem.Repository.VoterRepository;
+import com.votingsystem.VotingSystem.StrategyPattern.FirstPastThePostStrategy;
+import com.votingsystem.VotingSystem.StrategyPattern.PollResult;
+import com.votingsystem.VotingSystem.StrategyPattern.VotingStrategy;
+import com.votingsystem.VotingSystem.StrategyPattern.WeightedVotingStrategy;
 import com.votingsystem.VotingSystem.model.Constants;
 import com.votingsystem.VotingSystem.model.OpenPollFactory;
 import com.votingsystem.VotingSystem.model.Option;
@@ -23,10 +30,6 @@ import com.votingsystem.VotingSystem.model.PollFactory;
 import com.votingsystem.VotingSystem.model.PollRequest;
 import com.votingsystem.VotingSystem.model.TimePollFactory;
 import com.votingsystem.VotingSystem.model.Voter;
-import com.votingsystem.VotingSystem.model.StrategyPattern.FirstPastThePostStrategy;
-import com.votingsystem.VotingSystem.model.StrategyPattern.PollResult;
-import com.votingsystem.VotingSystem.model.StrategyPattern.VotingStrategy;
-import com.votingsystem.VotingSystem.model.StrategyPattern.WeightedVotingStrategy;
 
 @Service
 public class PollService {
@@ -36,15 +39,15 @@ public class PollService {
 
 	@Autowired
 	private OptionRepository optionRepository;
-
-	@Autowired
-	private NotificationRepository notificationRepository;
-
+ 
 	@Autowired
 	private VoterService adminService;
 
 	@Autowired
 	private VoterRepository voterRepository;
+	
+	@Autowired
+	private NotificationRepository notificationRepository;
 
 	private final Map<String, PollFactory> factories;
 	private final Map<String, VotingStrategy> votingStrategies;
@@ -88,7 +91,7 @@ public class PollService {
 
 	public void castVote(int optionId, String username) {
 		Option option = optionRepository.findById(optionId).orElseThrow(() -> new RuntimeException("Option not found"));
-		
+
 		// Increment vote count
 		option.setVoteCount(option.getVoteCount() + 1);
 
@@ -102,23 +105,22 @@ public class PollService {
 
 		// check poll result is already save or not in db
 		if (poll.getPollResults() == null) {
-	        result.setTotalVotes(poll.getTotalVote());  // Ensure totalVotes is set
-	        poll.setPollResults(result);
-	        result.setPoll(poll);
-	    } else {
-	        PollResult existingResult = poll.getPollResults();
-	        existingResult.setTotalVotes(poll.getTotalVote());
-	        existingResult.setVoteCounts(result.getVoteCounts());
-	        existingResult.setVotePercentages(result.getVotePercentages());
-	        existingResult.setWinner(result.getWinner());
-	    }
-        result.setPoll(poll);
+			result.setTotalVotes(poll.getTotalVote()); // Ensure totalVotes is set
+			poll.setPollResults(result);
+			result.setPoll(poll);
+		} else {
+			PollResult existingResult = poll.getPollResults();
+			existingResult.setTotalVotes(poll.getTotalVote());
+			existingResult.setVoteCounts(result.getVoteCounts());
+			existingResult.setVotePercentages(result.getVotePercentages());
+			existingResult.setWinner(result.getWinner());
+		}
+		result.setPoll(poll);
 		poll = pollRepository.save(poll);
-		
 
 		Optional<Voter> voter = voterRepository.findByUsername(username);
 		if (voter.isPresent()) {
-			List<Poll> voterPolls =  voter.get().getVotedPolls();
+			List<Poll> voterPolls = voter.get().getVotedPolls();
 			if (voterPolls == null) {
 				voterPolls = new ArrayList<>();
 			}
@@ -129,8 +131,19 @@ public class PollService {
 		Poll updatedPoll = pollRepository.save(poll);
 		option.setVotePercentage(result.getVotePercentages().get(option.getTitle()));
 		optionRepository.save(option);
-		updatedPoll.notifyVoters("The poll '" + poll.getTitle() + "' has been updated.", notificationRepository,
-				username);
+
+		// Notify subscribed voters
+		sendNotification(updatedPoll, username);
+
+	}
+
+	private void sendNotification(Poll updatedPoll, String username) {
+		IPollDecorator pollDecorator = new BasePollDecorator(updatedPoll);
+		pollDecorator = new NotificationDecorator(pollDecorator, notificationRepository);
+
+		pollDecorator.performOperation("The poll '" + updatedPoll.getTitle() + "' has been updated.", username,
+				updatedPoll.getSubscribedVoters());
+
 	}
 
 	public String subscribeToPoll(Long pollId, String username) {

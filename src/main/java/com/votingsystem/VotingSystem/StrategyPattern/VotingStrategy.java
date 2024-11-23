@@ -1,4 +1,4 @@
-package com.votingsystem.VotingSystem.model.StrategyPattern;
+package com.votingsystem.VotingSystem.StrategyPattern;
 
 import com.votingsystem.VotingSystem.model.Poll;
 

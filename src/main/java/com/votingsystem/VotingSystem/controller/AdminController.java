@@ -14,7 +14,6 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import com.votingsystem.VotingSystem.Service.CategoryService;
 import com.votingsystem.VotingSystem.Service.PollService;
 import com.votingsystem.VotingSystem.model.Category;
-import com.votingsystem.VotingSystem.model.Poll;
 import com.votingsystem.VotingSystem.model.PollRequest;
 
 @Controller

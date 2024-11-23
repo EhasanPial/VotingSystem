@@ -3,8 +3,7 @@ package com.votingsystem.VotingSystem.model;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.votingsystem.VotingSystem.Repository.NotificationRepository;
-import com.votingsystem.VotingSystem.model.StrategyPattern.PollResult;
+import com.votingsystem.VotingSystem.StrategyPattern.PollResult;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -76,26 +75,14 @@ public class Poll {
     @JoinColumn(name = "poll_result_id", referencedColumnName = "id")
     private PollResult pollResults;
 
-	// Subscribe a voter to the poll
-	public void subscribe(Voter voter) {
+ 	public void subscribe(Voter voter) {
 		subscribedVoters.add(voter);
 	}
 
-	// Unsubscribe a voter from the poll
-	public void unsubscribe(Voter voter) {
+ 	public void unsubscribe(Voter voter) {
 		subscribedVoters.remove(voter);
 	}
 
-	// Notify all subscribed voters about an update
-	public void notifyVoters(String message, NotificationRepository notificationRepository, String username) {
- 		for (Voter voter : subscribedVoters) {
- 			if (voter.getUsername().equals(username)) {
- 				continue;
- 			}
-			Notification notification = new Notification(message, voter, this,
-					Notification.NotificationType.POLL_UPDATED);
-			notificationRepository.save(notification);
-		}
-	}
+	 
 
 }

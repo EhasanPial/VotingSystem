@@ -29,7 +29,7 @@ public class Notification {
 		this.timestamp = LocalDateTime.now();
 		this.type = type;
 	}
-
+ 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
